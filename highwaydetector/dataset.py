@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import requests
 import os
@@ -16,18 +17,44 @@ class VideoLoader(Dataset):
         "Ideally the above steps should happen here."
         pass
     @staticmethod
-    def collate_samples(samples_dir):
+    def collate_samples(samples_dir, max_seq_len):
+        samples = []
         for video in os.listdir(samples_dir):
-            print(video)
-        return []
+            sequence = []
+            video_dir = os.path.join(samples_dir, video)
+            for sample in sorted(os.listdir(video_dir)):
+                sequence.append(os.path.join(video_dir, sample))
+                if len(sequence) == max_seq_len:
+                    samples.append(sequence)
+                    sequence = []
+
+            samples.append(sequence)
+        return samples
 
 
-    def __init__(self, frames_dir):
+    def __init__(self, frames_dir, max_seq_len=21):
         # TODO
         self.frames_dir = frames_dir
+        self.max_seq_len = max_seq_len
         assert os.path.exists(self.frames_dir)
-
-        self.collate_samples(self.frames_dir)
         
+        self.samples = self.collate_samples(self.frames_dir, max_seq_len=self.max_seq_len)
+
         pass
+
+    def __len__(self):
+        return len(self.samples)
+
+
+    def __getitem__(self, idx):
+        """
+        returns [seq_len, 3, 256, 256]
+        """
+        print(idx)
+        # Load images with PIL
+        
+        # Make image sizes uniform with torchvision.transform
+        
+        out = np.zeros((self.max_seq_len, 3, 256, 256))
+        return out
 
